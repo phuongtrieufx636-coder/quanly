@@ -37,14 +37,14 @@
       display:inline-flex;gap:6px;align-items:center;
     }
     .grid{display:grid;gap:14px}
-    @media (min-width:900px){ .grid-2{grid-template-columns:1.2fr .8fr} }
+    @media (min-width:1050px){ .grid-2{grid-template-columns:1.3fr .7fr} }
     .card{
       background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);
       padding:16px;
     }
     .card h2{font-size:18px;margin:0 0 10px 0}
     form .row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
-    @media (max-width:720px){ form .row{grid-template-columns:repeat(2,1fr)} }
+    @media (max-width:860px){ form .row{grid-template-columns:repeat(2,1fr)} }
     form .row > div{display:flex;flex-direction:column}
     label{font-size:12px;color:var(--muted);margin-bottom:6px}
     input, select, textarea{
@@ -53,7 +53,7 @@
     }
     input:focus, select:focus, textarea:focus{border-color:var(--accent); box-shadow:0 0 0 4px var(--accent-weak)}
     button{
-      border:1px solid var(--line); background:#fff; color:var(--text); border-radius:10px; padding:10px 14px;
+      border:1px solid var(--line); background:#fff; color:#0f172a; border-radius:10px; padding:10px 14px;
       font-size:14px; cursor:pointer;
     }
     .btn-primary{background:var(--accent); color:#fff; border-color:var(--accent)}
@@ -63,7 +63,7 @@
     .btn{display:inline-flex;align-items:center;gap:8px}
     .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
     .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:10px 0 0 0}
-    .stat{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff}
+    .stat{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff;transition:background .2s}
     .stat .big{font-weight:700;font-size:18px}
     .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
     table{width:100%;border-collapse:collapse;font-size:14px;background:#fff}
@@ -89,11 +89,19 @@
     .foot{margin-top:8px;color:var(--muted);font-size:12px}
     .danger-zone{display:flex;gap:8px;flex-wrap:wrap}
     dialog::backdrop{background:rgba(0,0,0,.12);}
-    dialog{border:none;border-radius:16px;box-shadow:var(--shadow);padding:0;max-width:520px;width:90%}
+    dialog{border:none;border-radius:16px;box-shadow:var(--shadow);padding:0;max-width:680px;width:94%}
     .modal{padding:16px}
     .modal header{padding:12px 16px;border-bottom:1px solid var(--line);font-weight:700}
     .modal .body{padding:12px 16px}
     .modal footer{padding:12px 16px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px}
+    /* Toast */
+    .toast{
+      position:fixed;left:50%;bottom:28px;transform:translateX(-50%);
+      background:#0f172a;color:#fff;padding:10px 14px;border-radius:999px;box-shadow:var(--shadow);
+      opacity:0;pointer-events:none;transition:opacity .25s, bottom .25s; z-index:9999;
+    }
+    .toast.show{opacity:1;bottom:36px}
+    .hint{font-size:12px;color:var(--muted)}
   </style>
 </head>
 <body>
@@ -125,8 +133,32 @@
               <input id="condition" type="number" min="50" max="100" step="1" value="95" required />
             </div>
             <div>
+              <label for="battery">Pin %</label>
+              <input id="battery" type="number" min="50" max="100" step="1" placeholder="VD: 90" />
+            </div>
+            <div>
+              <label for="cycles">Số lần sạc</label>
+              <input id="cycles" type="number" min="0" step="1" placeholder="VD: 350" />
+            </div>
+            <div>
+              <label for="icloud">iCloud</label>
+              <select id="icloud">
+                <option value="">Không rõ</option>
+                <option value="Sạch">Sạch</option>
+                <option value="Dính">Dính</option>
+              </select>
+            </div>
+            <div>
+              <label for="origin">Nguồn gốc</label>
+              <input id="origin" placeholder="VN / US / JP ..." />
+            </div>
+            <div>
               <label for="buyPrice">Giá nhập (đ)</label>
               <input id="buyPrice" type="number" min="0" step="1000" placeholder="VD: 8,500,000" />
+            </div>
+            <div>
+              <label for="expectedPrice">Giá dự kiến bán (đ)</label>
+              <input id="expectedPrice" type="number" min="0" step="1000" placeholder="VD: 9,990,000" />
             </div>
             <div>
               <label for="dateIn">Ngày nhập</label>
@@ -134,7 +166,7 @@
             </div>
             <div style="grid-column:1 / -1">
               <label for="note">Ghi chú</label>
-              <input id="note" placeholder="Phụ kiện, pin %, bảo hành..." />
+              <input id="note" placeholder="Phụ kiện, bảo hành..." />
             </div>
           </div>
           <div class="spacer"></div>
@@ -148,7 +180,7 @@
 
       <div class="card">
         <h2>Tổng quan</h2>
-        <div class="stats">
+        <div class="stats" id="statsBox">
           <div class="stat">
             <div class="muted">Đang tồn</div>
             <div id="s_instock" class="big">0</div>
@@ -214,7 +246,13 @@
                 <th>Model</th>
                 <th>Màu</th>
                 <th class="right">Đẹp %</th>
+                <th class="right">Pin %</th>
+                <th class="right">Sạc</th>
+                <th>iCloud</th>
+                <th>Nguồn</th>
                 <th class="right">Giá nhập</th>
+                <th class="right">Giá dự kiến</th>
+                <th class="right">Lãi dự kiến</th>
                 <th>Ngày nhập</th>
                 <th>Trạng thái</th>
                 <th>Ghi chú</th>
@@ -244,6 +282,10 @@
                 <th>Model</th>
                 <th>Màu</th>
                 <th class="right">Đẹp %</th>
+                <th class="right">Pin %</th>
+                <th class="right">Sạc</th>
+                <th>iCloud</th>
+                <th>Nguồn</th>
                 <th class="right">Giá nhập</th>
                 <th class="right">Giá bán</th>
                 <th>Ngày bán</th>
@@ -271,6 +313,10 @@
           <option value=".">Dấu chấm .</option>
           <option value=" ">Khoảng trắng</option>
         </select></div>
+        <div class="pill">
+          <label><input type="checkbox" id="lockImei" /> Khoá sửa IMEI</label>
+        </div>
+        <span class="hint">Khuyến nghị bật để tránh sửa nhầm IMEI</span>
       </div>
     </div>
 
@@ -306,7 +352,160 @@
       </div>
     </dialog>
 
-  </div>
+    <!-- Edit Stock Modal -->
+    <dialog id="dlgEdit">
+      <div class="modal">
+        <header>Sửa thông tin máy (Tồn kho)</header>
+        <div class="body">
+          <div class="row">
+            <div>
+              <label for="e_imei">IMEI *</label>
+              <input id="e_imei" required />
+            </div>
+            <div>
+              <label for="e_model">Model *</label>
+              <input id="e_model" required />
+            </div>
+            <div>
+              <label for="e_color">Màu sắc</label>
+              <input id="e_color" />
+            </div>
+            <div>
+              <label for="e_condition">Tình trạng (%)</label>
+              <input id="e_condition" type="number" min="50" max="100" step="1" />
+            </div>
+            <div>
+              <label for="e_battery">Pin %</label>
+              <input id="e_battery" type="number" min="50" max="100" step="1" />
+            </div>
+            <div>
+              <label for="e_cycles">Số lần sạc</label>
+              <input id="e_cycles" type="number" min="0" step="1" />
+            </div>
+            <div>
+              <label for="e_icloud">iCloud</label>
+              <select id="e_icloud">
+                <option value="">Không rõ</option>
+                <option value="Sạch">Sạch</option>
+                <option value="Dính">Dính</option>
+              </select>
+            </div>
+            <div>
+              <label for="e_origin">Nguồn gốc</label>
+              <input id="e_origin" />
+            </div>
+            <div>
+              <label for="e_buyPrice">Giá nhập</label>
+              <input id="e_buyPrice" type="number" min="0" step="1000" />
+            </div>
+            <div>
+              <label for="e_expectedPrice">Giá dự kiến</label>
+              <input id="e_expectedPrice" type="number" min="0" step="1000" />
+            </div>
+            <div>
+              <label for="e_dateIn">Ngày nhập</label>
+              <input id="e_dateIn" type="date" />
+            </div>
+            <div style="grid-column:1 / -1">
+              <label for="e_note">Ghi chú</label>
+              <input id="e_note" />
+            </div>
+            <div>
+              <label for="e_status">Trạng thái</label>
+              <select id="e_status">
+                <option value="instock">Đang tồn</option>
+                <option value="hold">Giữ hàng</option>
+              </select>
+            </div>
+          </div>
+          <div class="spacer"></div>
+          <div class="hint">Đang <b id="imeiLockState">khoá</b> IMEI — vào “Cài đặt nhanh” để bật/tắt.</div>
+        </div>
+        <footer>
+          <button class="btn btn-ghost" id="btnCancelEdit">Hủy</button>
+          <button class="btn btn-primary" id="btnSaveEdit">Lưu</button>
+        </footer>
+      </div>
+    </dialog>
+
+    <!-- Edit Sold Modal -->
+    <dialog id="dlgEditSold">
+      <div class="modal">
+        <header>Sửa thông tin giao dịch (Đã bán)</header>
+        <div class="body">
+          <div class="row">
+            <div>
+              <label for="es_imei">IMEI *</label>
+              <input id="es_imei" required />
+            </div>
+            <div>
+              <label for="es_model">Model *</label>
+              <input id="es_model" required />
+            </div>
+            <div>
+              <label for="es_color">Màu sắc</label>
+              <input id="es_color" />
+            </div>
+            <div>
+              <label for="es_condition">Tình trạng (%)</label>
+              <input id="es_condition" type="number" min="50" max="100" step="1" />
+            </div>
+            <div>
+              <label for="es_battery">Pin %</label>
+              <input id="es_battery" type="number" min="50" max="100" step="1" />
+            </div>
+            <div>
+              <label for="es_cycles">Số lần sạc</label>
+              <input id="es_cycles" type="number" min="0" step="1" />
+            </div>
+            <div>
+              <label for="es_icloud">iCloud</label>
+              <select id="es_icloud">
+                <option value="">Không rõ</option>
+                <option value="Sạch">Sạch</option>
+                <option value="Dính">Dính</option>
+              </select>
+            </div>
+            <div>
+              <label for="es_origin">Nguồn gốc</label>
+              <input id="es_origin" />
+            </div>
+            <div>
+              <label for="es_buyPrice">Giá nhập</label>
+              <input id="es_buyPrice" type="number" min="0" step="1000" />
+            </div>
+            <div>
+              <label for="es_sellPrice">Giá bán</label>
+              <input id="es_sellPrice" type="number" min="0" step="1000" />
+            </div>
+            <div>
+              <label for="es_dateIn">Ngày nhập</label>
+              <input id="es_dateIn" type="date" />
+            </div>
+            <div>
+              <label for="es_dateOut">Ngày bán</label>
+              <input id="es_dateOut" type="date" />
+            </div>
+            <div>
+              <label for="es_buyer">Người mua</label>
+              <input id="es_buyer" />
+            </div>
+            <div style="grid-column:1 / -1">
+              <label for="es_sellNote">Ghi chú</label>
+              <input id="es_sellNote" />
+            </div>
+          </div>
+          <div class="spacer"></div>
+          <div class="pill">Lợi nhuận sẽ tự tính theo Giá bán - Giá nhập</div>
+        </div>
+        <footer>
+          <button class="btn btn-ghost" id="btnCancelEditSold">Hủy</button>
+          <button class="btn btn-primary" id="btnSaveEditSold">Lưu</button>
+        </footer>
+      </div>
+    </dialog>
+
+    <div id="toast" class="toast">Đã xóa dữ liệu</div>
 
   <script>
     // ===== Utilities =====
@@ -322,11 +521,14 @@
     const today = () => new Date().toISOString().slice(0,10);
     const getCurrency = () => localStorage.getItem('cfg_currency') || 'đ';
     const getThousand = () => localStorage.getItem('cfg_thousand') || ',';
+    const getLockImei = () => (localStorage.getItem('cfg_lock_imei') ?? '1') === '1';
     const saveCfg = () => {
       localStorage.setItem('cfg_currency', $('#currency').value);
       localStorage.setItem('cfg_thousand', $('#thousand').value);
+      localStorage.setItem('cfg_lock_imei', $('#lockImei').checked ? '1':'0');
       renderAll();
     };
+    const toast = (msg='Đã xong') => { const el = $('#toast'); el.textContent = msg; el.classList.add('show'); setTimeout(()=> el.classList.remove('show'), 1800); };
 
     // ===== Device detection =====
     function detectDevice(){
@@ -356,6 +558,8 @@
 
     let DB = loadData();
     let currentSellImei = null;
+    let currentEditId = null;
+    let currentEditSoldImei = null;
 
     // ===== Add item =====
     $('#dateIn').value = today();
@@ -372,7 +576,12 @@
         model: $('#model').value.trim(),
         color: $('#color').value.trim(),
         condition: Number($('#condition').value||0),
+        battery: Number($('#battery').value||0),
+        cycles: Number($('#cycles').value||0),
+        icloud: $('#icloud').value,
+        origin: $('#origin').value.trim(),
         buyPrice: Number($('#buyPrice').value||0),
+        expectedPrice: Number($('#expectedPrice').value||0),
         dateIn: $('#dateIn').value || today(),
         note: $('#note').value.trim(),
         status: 'instock', // instock | hold
@@ -384,6 +593,7 @@
       $('#condition').value = 95;
       $('#dateIn').value = today();
       renderAll();
+      toast('Đã thêm máy');
     });
 
     // ===== Tabs =====
@@ -408,12 +618,14 @@
       if(!confirm('Xóa ' + ids.length + ' máy đã chọn?')) return;
       DB.items = DB.items.filter(x=> !ids.includes(x.id));
       saveData(DB); renderAll();
+      toast('Đã xóa ' + ids.length + ' máy');
     });
     $('#btnHoldToggle').addEventListener('click', ()=>{
       const ids = $$('#tblStock tbody input[type="checkbox"]:checked').map(c=>c.dataset.id);
       if(ids.length===0) { alert('Chưa chọn mục nào'); return; }
       DB.items = DB.items.map(x=> ids.includes(x.id) ? {...x, status: x.status==='hold'?'instock':'hold'} : x);
       saveData(DB); renderStock();
+      toast('Đã đổi trạng thái ' + ids.length + ' máy');
     });
 
     // ===== Sell modal =====
@@ -429,7 +641,6 @@
       $('#previewProfit').textContent = fmt(0);
       dlgSell.showModal();
       $('#sellPrice').focus();
-      // Store buyPrice to compute preview
       $('#sellPrice').dataset.buyPrice = String(buyPrice||0);
     }
     function previewProfit(){
@@ -451,7 +662,8 @@
         buyer: $('#buyer').value.trim(),
         sellNote: $('#sellNote').value.trim(),
         profit: price - (Number(it.buyPrice)||0),
-        soldAt: Date.now()
+        soldAt: Date.now(),
+        status: 'sold'
       };
       DB.sold.push(sold);
       DB.items.splice(idx,1);
@@ -459,7 +671,109 @@
       dlgSell.close();
       renderAll();
       tabSold.click();
+      toast('Đã ghi bán');
     });
+
+    // ===== Edit Stock Modal logic =====
+    const dlgEdit = $('#dlgEdit');
+    $('#btnCancelEdit').addEventListener('click', ()=> dlgEdit.close());
+    $('#btnSaveEdit').addEventListener('click', ()=>{
+      if(currentEditId==null) return;
+      const it = DB.items.find(x=>x.id===currentEditId);
+      if(!it) return;
+      const newImei = $('#e_imei').value.trim();
+      if(!newImei){ alert('IMEI không được rỗng'); return; }
+      const imeiTaken = DB.items.some(x=> x.imei===newImei && x.id!==it.id) || DB.sold.some(x=> x.imei===newImei);
+      if(imeiTaken){ alert('IMEI đã tồn tại!'); return; }
+      it.imei = newImei;
+      it.model = $('#e_model').value.trim();
+      it.color = $('#e_color').value.trim();
+      it.condition = Number($('#e_condition').value||0);
+      it.battery = Number($('#e_battery').value||0);
+      it.cycles = Number($('#e_cycles').value||0);
+      it.icloud = $('#e_icloud').value;
+      it.origin = $('#e_origin').value.trim();
+      it.buyPrice = Number($('#e_buyPrice').value||0);
+      it.expectedPrice = Number($('#e_expectedPrice').value||0);
+      it.dateIn = $('#e_dateIn').value || it.dateIn;
+      it.note = $('#e_note').value.trim();
+      it.status = $('#e_status').value;
+      saveData(DB); renderAll(); dlgEdit.close(); toast('Đã lưu thay đổi');
+    });
+    function openEditDialog(itemId){
+      currentEditId = itemId;
+      const it = DB.items.find(x=>x.id===itemId);
+      if(!it) return;
+      $('#e_imei').value = it.imei || '';
+      $('#e_model').value = it.model || '';
+      $('#e_color').value = it.color || '';
+      $('#e_condition').value = Number(it.condition||0);
+      $('#e_battery').value = Number(it.battery||0);
+      $('#e_cycles').value = Number(it.cycles||0);
+      $('#e_icloud').value = it.icloud || '';
+      $('#e_origin').value = it.origin || '';
+      $('#e_buyPrice').value = Number(it.buyPrice||0);
+      $('#e_expectedPrice').value = Number(it.expectedPrice||0);
+      $('#e_dateIn').value = it.dateIn || '';
+      $('#e_note').value = it.note || '';
+      $('#e_status').value = it.status || 'instock';
+      // Respect IMEI lock
+      const locked = getLockImei();
+      $('#e_imei').disabled = locked;
+      $('#imeiLockState').textContent = locked ? 'khoá' : 'mở';
+      dlgEdit.showModal();
+    }
+
+    // ===== Edit Sold Modal logic =====
+    const dlgEditSold = $('#dlgEditSold');
+    $('#btnCancelEditSold').addEventListener('click', ()=> dlgEditSold.close());
+    $('#btnSaveEditSold').addEventListener('click', ()=>{
+      if(currentEditSoldImei==null) return;
+      const idx = DB.sold.findIndex(x=>x.imei===currentEditSoldImei);
+      if(idx<0) return;
+      const it = DB.sold[idx];
+      const newImei = $('#es_imei').value.trim();
+      if(!newImei){ alert('IMEI không được rỗng'); return; }
+      const imeiTakenInItems = DB.items.some(x=> x.imei===newImei);
+      const imeiTakenInSold = DB.sold.some((x,i)=> x.imei===newImei && i!==idx);
+      if(imeiTakenInItems || imeiTakenInSold){ alert('IMEI đã tồn tại!'); return; }
+      it.imei = newImei;
+      it.model = $('#es_model').value.trim();
+      it.color = $('#es_color').value.trim();
+      it.condition = Number($('#es_condition').value||0);
+      it.battery = Number($('#es_battery').value||0);
+      it.cycles = Number($('#es_cycles').value||0);
+      it.icloud = $('#es_icloud').value;
+      it.origin = $('#es_origin').value.trim();
+      it.buyPrice = Number($('#es_buyPrice').value||0);
+      it.sellPrice = Number($('#es_sellPrice').value||0);
+      it.dateIn = $('#es_dateIn').value || it.dateIn;
+      it.dateOut = $('#es_dateOut').value || it.dateOut;
+      it.buyer = $('#es_buyer').value.trim();
+      it.sellNote = $('#es_sellNote').value.trim();
+      it.profit = Number(it.sellPrice||0) - Number(it.buyPrice||0);
+      saveData(DB); renderAll(); dlgEditSold.close(); toast('Đã lưu thay đổi (đã bán)');
+    });
+    function openEditSoldDialog(imei){
+      currentEditSoldImei = imei;
+      const it = DB.sold.find(x=>x.imei===imei);
+      if(!it) return;
+      $('#es_imei').value = it.imei || '';
+      $('#es_model').value = it.model || '';
+      $('#es_color').value = it.color || '';
+      $('#es_condition').value = Number(it.condition||0);
+      $('#es_battery').value = Number(it.battery||0);
+      $('#es_cycles').value = Number(it.cycles||0);
+      $('#es_icloud').value = it.icloud || '';
+      $('#es_origin').value = it.origin || '';
+      $('#es_buyPrice').value = Number(it.buyPrice||0);
+      $('#es_sellPrice').value = Number(it.sellPrice||0);
+      $('#es_dateIn').value = it.dateIn || '';
+      $('#es_dateOut').value = it.dateOut || '';
+      $('#es_buyer').value = it.buyer || '';
+      $('#es_sellNote').value = it.sellNote || '';
+      dlgEditSold.showModal();
+    }
 
     // ===== Render Stock =====
     function renderStock(){
@@ -479,17 +793,23 @@
 
       for(const it of list){
         const tr = document.createElement('tr');
+        const expProfit = Number(it.expectedPrice||0) - Number(it.buyPrice||0);
+        const badge = (expProfit||0) >= 0 ? '<span class="badge bd-success">Lãi</span>' : '<span class="badge bd-danger">Lỗ</span>';
         tr.innerHTML = `
           <td class="center"><input type="checkbox" data-id="${it.id}"></td>
           <td class="mono">${it.imei}</td>
           <td>${it.model||''}</td>
           <td>${it.color||''}</td>
           <td class="right">${Number(it.condition||0)}%</td>
+          <td class="right">${Number(it.battery||0)||''}</td>
+          <td class="right">${Number(it.cycles||0)||''}</td>
+          <td>${it.icloud||''}</td>
+          <td>${it.origin||''}</td>
           <td class="right">${fmt(Number(it.buyPrice||0))}</td>
+          <td class="right">${fmt(Number(it.expectedPrice||0))}</td>
+          <td class="right">${fmt(expProfit)} ${badge}</td>
           <td>${it.dateIn||''}</td>
-          <td>
-            ${it.status==='hold' ? '<span class="badge bd-warning">Giữ hàng</span>' : '<span class="badge bd-success">Đang tồn</span>'}
-          </td>
+          <td>${it.status==='hold' ? '<span class="badge bd-warning">Giữ hàng</span>' : '<span class="badge bd-success">Đang tồn</span>'}</td>
           <td>${it.note||''}</td>
           <td class="center">
             <button class="btn btn-outline" data-act="edit" data-id="${it.id}">✏️ Sửa</button>
@@ -500,7 +820,6 @@
         tbody.appendChild(tr);
       }
 
-      // row actions
       tbody.querySelectorAll('button[data-act="sell"]').forEach(btn=>{
         btn.addEventListener('click', ()=>{
           const it = DB.items.find(x=>x.imei === btn.dataset.imei);
@@ -512,29 +831,11 @@
           if(!confirm('Xóa máy này?')) return;
           DB.items = DB.items.filter(x=> x.id !== btn.dataset.id);
           saveData(DB); renderAll();
+          toast('Đã xóa 1 máy');
         });
       });
       tbody.querySelectorAll('button[data-act="edit"]').forEach(btn=>{
-        btn.addEventListener('click', ()=>{
-          const id = btn.dataset.id;
-          const it = DB.items.find(x=> x.id===id);
-          const model = prompt('Model:', it.model||'');
-          if(model===null) return;
-          const color = prompt('Màu:', it.color||'');
-          if(color===null) return;
-          const condition = prompt('Tình trạng (%):', String(it.condition||95));
-          if(condition===null) return;
-          const buyPrice = prompt('Giá nhập:', String(it.buyPrice||0));
-          if(buyPrice===null) return;
-          const note = prompt('Ghi chú:', it.note||'');
-          if(note===null) return;
-          it.model = model.trim();
-          it.color = color.trim();
-          it.condition = Number(condition||0);
-          it.buyPrice = Number(buyPrice||0);
-          it.note = note.trim();
-          saveData(DB); renderStock(); updateStats();
-        });
+        btn.addEventListener('click', ()=> openEditDialog(btn.dataset.id));
       });
     }
 
@@ -562,13 +863,20 @@
           <td>${it.model||''}</td>
           <td>${it.color||''}</td>
           <td class="right">${Number(it.condition||0)}%</td>
+          <td class="right">${Number(it.battery||0)||''}</td>
+          <td class="right">${Number(it.cycles||0)||''}</td>
+          <td>${it.icloud||''}</td>
+          <td>${it.origin||''}</td>
           <td class="right">${fmt(Number(it.buyPrice||0))}</td>
           <td class="right">${fmt(Number(it.sellPrice||0))}</td>
           <td>${it.dateOut||''}</td>
           <td>${it.buyer||''}</td>
           <td class="right">${fmt(Number(it.profit||0))} ${badge}</td>
           <td>${it.sellNote||''}</td>
-          <td class="center"><button class="btn btn-outline" data-act="undo" data-imei="${it.imei}">↩️ Hoàn tác</button></td>
+          <td class="center">
+            <button class="btn btn-outline" data-act="editSold" data-imei="${it.imei}">✏️ Sửa</button>
+            <button class="btn btn-outline" data-act="undo" data-imei="${it.imei}">↩️ Hoàn tác</button>
+          </td>
         `;
         tbody.appendChild(tr);
       });
@@ -586,7 +894,12 @@
             model: it.model,
             color: it.color,
             condition: it.condition,
+            battery: it.battery,
+            cycles: it.cycles,
+            icloud: it.icloud,
+            origin: it.origin,
             buyPrice: it.buyPrice,
+            expectedPrice: it.expectedPrice || 0,
             dateIn: it.dateIn,
             note: it.note,
             status: 'instock',
@@ -595,11 +908,22 @@
           DB.items.push(back);
           DB.sold.splice(idx,1);
           saveData(DB); renderAll(); tabStock.click();
+          toast('Đã hoàn tác');
         });
+      });
+      tbody.querySelectorAll('button[data-act="editSold"]').forEach(btn=>{
+        btn.addEventListener('click', ()=> openEditSoldDialog(btn.dataset.imei));
       });
     }
 
     // ===== Stats =====
+    function blinkStats(){
+      const box = $('#statsBox');
+      box.querySelectorAll('.stat').forEach(s=>{
+        s.style.background = '#f0f9ff';
+        setTimeout(()=> s.style.background = '#fff', 350);
+      });
+    }
     function updateStats(){
       const instock = DB.items.length;
       const capital = DB.items.reduce((s,x)=> s + Number(x.buyPrice||0), 0);
@@ -609,6 +933,7 @@
       $('#s_capital').textContent = fmt(capital);
       $('#s_revenue').textContent = fmt(revenue);
       $('#s_profit').textContent = fmt(profit);
+      blinkStats();
     }
 
     // ===== Export CSV =====
@@ -620,34 +945,28 @@
       URL.revokeObjectURL(url);
     }
     $('#btnExportCSV').addEventListener('click', ()=>{
-      // Export two sheets style: items + sold in one file with markers
       const esc = s => ('"'+ String(s??'').replace(/"/g,'""') + '"');
-      const itemsHead = ['imei','model','color','condition','buyPrice','dateIn','note','status'];
-      const soldHead = ['imei','model','color','condition','buyPrice','sellPrice','dateIn','dateOut','buyer','profit','note','sellNote'];
+      // Items & Sold headers include new fields
+      const itemsHead = ['imei','model','color','condition','battery','cycles','icloud','origin','buyPrice','expectedPrice','dateIn','note','status'];
+      const soldHead  = ['imei','model','color','condition','battery','cycles','icloud','origin','buyPrice','sellPrice','dateIn','dateOut','buyer','profit','note','sellNote'];
       const itemsCsv = [itemsHead.join(',')].concat(DB.items.map(it=> itemsHead.map(k=> esc(it[k])).join(','))).join('\n');
-      const soldCsv = [soldHead.join(',')].concat(DB.sold.map(it=> soldHead.map(k=> esc(it[k])).join(','))).join('\n');
+      const soldCsv  = [soldHead.join(',') ].concat(DB.sold.map(it=>  soldHead.map(k=> esc(it[k])).join(','))).join('\n');
       const out = '===TON KHO===\n' + itemsCsv + '\n\n===DA BAN===\n' + soldCsv;
       downloadFile('kho_dien_thoai.csv', out);
+      toast('Đã xuất CSV');
     });
 
-    // ===== CSV Parser (simple, quoted values supported) =====
+    // ===== CSV Parser =====
     function parseCSV(text){
-      // Split into lines, keep non-empty
       const lines = text.replace(/\r/g,'').split('\n');
-      // Helper to parse a single CSV line with quotes
       function parseLine(line){
-        const res = [];
-        let cur = '';
-        let inQ = false;
+        const res = []; let cur = ''; let inQ = false;
         for(let i=0;i<line.length;i++){
           const ch = line[i];
           if(inQ){
             if(ch === '"'){
-              if(line[i+1] === '"'){ cur += '"'; i++; }
-              else { inQ = false; }
-            } else {
-              cur += ch;
-            }
+              if(line[i+1] === '"'){ cur += '"'; i++; } else { inQ = false; }
+            } else { cur += ch; }
           } else {
             if(ch === '"'){ inQ = true; }
             else if(ch === ','){ res.push(cur); cur = ''; }
@@ -668,12 +987,8 @@
       reader.onload = () => {
         try{
           const txt = String(reader.result);
-          // Support two modes:
-          // 1) Combined file with sections "===TON KHO===" and "===DA BAN==="
-          // 2) Single table CSV with headers (either items or sold)
           const hasMarkers = /===TON KHO===/i.test(txt) || /===DA BAN===/i.test(txt);
-          let newItems = [];
-          let newSold = [];
+          let newItems = []; let newSold = [];
           if(hasMarkers){
             const parts = txt.split(/===DA BAN===/i);
             const tonPart = parts[0].split(/===TON KHO===/i)[1] || '';
@@ -683,7 +998,6 @@
             newItems = csvRowsToItems(itemsRows);
             newSold  = csvRowsToSold(soldRows);
           } else {
-            // Single CSV table: detect by header columns
             const rows = parseCSV(txt);
             const header = rows[0].map(h=>h.toLowerCase());
             if(header.includes('sellprice') || header.includes('buyer') || header.includes('dateout')){
@@ -695,7 +1009,7 @@
           if(!confirm('Nhập CSV sẽ ghi đè dữ liệu hiện tại. Tiếp tục?')) return;
           DB = { items: newItems, sold: newSold };
           saveData(DB); renderAll();
-          alert('Nhập CSV thành công.');
+          toast('Nhập CSV thành công');
         }catch(err){
           alert('Không thể nhập CSV: ' + err.message);
         }
@@ -718,7 +1032,12 @@
           model: r[idx('model')] || '',
           color: r[idx('color')] || '',
           condition: Number(r[idx('condition')] || 0),
+          battery: Number(r[idx('battery')] || 0),
+          cycles: Number(r[idx('cycles')] || 0),
+          icloud: r[idx('icloud')] || '',
+          origin: r[idx('origin')] || '',
           buyPrice: Number(r[idx('buyprice')] || 0),
+          expectedPrice: Number(r[idx('expectedprice')] || 0),
           dateIn: r[idx('datein')] || '',
           note: r[idx('note')] || '',
           status: (r[idx('status')] || 'instock').toLowerCase()==='hold'?'hold':'instock',
@@ -742,16 +1061,20 @@
           model: r[idx('model')] || '',
           color: r[idx('color')] || '',
           condition: Number(r[idx('condition')] || 0),
+          battery: Number(r[idx('battery')] || 0),
+          cycles: Number(r[idx('cycles')] || 0),
+          icloud: r[idx('icloud')] || '',
+          origin: r[idx('origin')] || '',
           buyPrice: Number(r[idx('buyprice')] || 0),
-          dateIn: r[idx('datein')] || '',
-          note: r[idx('note')] || '',
-          status: 'sold',
           sellPrice: Number(r[idx('sellprice')] || 0),
+          dateIn: r[idx('datein')] || '',
           dateOut: r[idx('dateout')] || '',
           buyer: r[idx('buyer')] || '',
           profit: Number(r[idx('profit')] || 0),
+          note: r[idx('note')] || '',
           sellNote: r[idx('sellnote')] || '',
-          soldAt: Date.now()
+          soldAt: Date.now(),
+          status: 'sold'
         };
         if(rec.imei) out.push(rec);
       }
@@ -761,8 +1084,21 @@
     // ===== Settings =====
     $('#currency').value = getCurrency();
     $('#thousand').value = getThousand();
+    $('#lockImei').checked = getLockImei();
     $('#currency').addEventListener('change', saveCfg);
     $('#thousand').addEventListener('change', saveCfg);
+    $('#lockImei').addEventListener('change', saveCfg);
+
+    // ===== Reset All =====
+    $('#btnReset').addEventListener('click', ()=>{
+      if(!confirm('Bạn chắc chắn muốn xóa toàn bộ dữ liệu?')) return;
+      DB = {items:[], sold:[]};
+      saveData(DB);
+      renderAll();
+      toast('Đã xóa toàn bộ dữ liệu');
+      window.scrollTo({top:0, behavior:'smooth'});
+      tabStock.click();
+    });
 
     // ===== Initial render =====
     function renderAll(){
