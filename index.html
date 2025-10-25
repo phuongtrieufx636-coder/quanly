@@ -130,23 +130,11 @@
             </div>
             <div>
               <label for="condition">Tình trạng (đẹp %) *</label>
-              <input id="condition" type="number" min="50" max="100" step="1" value="95" required />
+              <input id="condition" type="number" min="50" max="100" step="1" value="99" required />
             </div>
             <div>
               <label for="battery">Pin %</label>
               <input id="battery" type="number" min="50" max="100" step="1" placeholder="VD: 90" />
-            </div>
-            <div>
-              <label for="cycles">Số lần sạc</label>
-              <input id="cycles" type="number" min="0" step="1" placeholder="VD: 350" />
-            </div>
-            <div>
-              <label for="icloud">iCloud</label>
-              <select id="icloud">
-                <option value="">Không rõ</option>
-                <option value="Sạch">Sạch</option>
-                <option value="Dính">Dính</option>
-              </select>
             </div>
             <div>
               <label for="origin">Nguồn gốc</label>
@@ -247,8 +235,6 @@
                 <th>Màu</th>
                 <th class="right">Đẹp %</th>
                 <th class="right">Pin %</th>
-                <th class="right">Sạc</th>
-                <th>iCloud</th>
                 <th>Nguồn</th>
                 <th class="right">Giá nhập</th>
                 <th class="right">Giá dự kiến</th>
@@ -283,8 +269,6 @@
                 <th>Màu</th>
                 <th class="right">Đẹp %</th>
                 <th class="right">Pin %</th>
-                <th class="right">Sạc</th>
-                <th>iCloud</th>
                 <th>Nguồn</th>
                 <th class="right">Giá nhập</th>
                 <th class="right">Giá bán</th>
@@ -379,18 +363,6 @@
               <input id="e_battery" type="number" min="50" max="100" step="1" />
             </div>
             <div>
-              <label for="e_cycles">Số lần sạc</label>
-              <input id="e_cycles" type="number" min="0" step="1" />
-            </div>
-            <div>
-              <label for="e_icloud">iCloud</label>
-              <select id="e_icloud">
-                <option value="">Không rõ</option>
-                <option value="Sạch">Sạch</option>
-                <option value="Dính">Dính</option>
-              </select>
-            </div>
-            <div>
               <label for="e_origin">Nguồn gốc</label>
               <input id="e_origin" />
             </div>
@@ -419,7 +391,7 @@
             </div>
           </div>
           <div class="spacer"></div>
-          <div class="hint">Đang <b id="imeiLockState">khoá</b> IMEI — vào “Cài đặt nhanh” để bật/tắt.</div>
+          <div class="hint">IMEI đang <b id="imeiLockState">khoá</b> — vào “Cài đặt nhanh” để bật/tắt.</div>
         </div>
         <footer>
           <button class="btn btn-ghost" id="btnCancelEdit">Hủy</button>
@@ -453,18 +425,6 @@
             <div>
               <label for="es_battery">Pin %</label>
               <input id="es_battery" type="number" min="50" max="100" step="1" />
-            </div>
-            <div>
-              <label for="es_cycles">Số lần sạc</label>
-              <input id="es_cycles" type="number" min="0" step="1" />
-            </div>
-            <div>
-              <label for="es_icloud">iCloud</label>
-              <select id="es_icloud">
-                <option value="">Không rõ</option>
-                <option value="Sạch">Sạch</option>
-                <option value="Dính">Dính</option>
-              </select>
             </div>
             <div>
               <label for="es_origin">Nguồn gốc</label>
@@ -577,8 +537,6 @@
         color: $('#color').value.trim(),
         condition: Number($('#condition').value||0),
         battery: Number($('#battery').value||0),
-        cycles: Number($('#cycles').value||0),
-        icloud: $('#icloud').value,
         origin: $('#origin').value.trim(),
         buyPrice: Number($('#buyPrice').value||0),
         expectedPrice: Number($('#expectedPrice').value||0),
@@ -590,7 +548,7 @@
       DB.items.push(item);
       saveData(DB);
       e.target.reset();
-      $('#condition').value = 95;
+      $('#condition').value = 99;
       $('#dateIn').value = today();
       renderAll();
       toast('Đã thêm máy');
@@ -690,8 +648,6 @@
       it.color = $('#e_color').value.trim();
       it.condition = Number($('#e_condition').value||0);
       it.battery = Number($('#e_battery').value||0);
-      it.cycles = Number($('#e_cycles').value||0);
-      it.icloud = $('#e_icloud').value;
       it.origin = $('#e_origin').value.trim();
       it.buyPrice = Number($('#e_buyPrice').value||0);
       it.expectedPrice = Number($('#e_expectedPrice').value||0);
@@ -709,15 +665,12 @@
       $('#e_color').value = it.color || '';
       $('#e_condition').value = Number(it.condition||0);
       $('#e_battery').value = Number(it.battery||0);
-      $('#e_cycles').value = Number(it.cycles||0);
-      $('#e_icloud').value = it.icloud || '';
       $('#e_origin').value = it.origin || '';
       $('#e_buyPrice').value = Number(it.buyPrice||0);
       $('#e_expectedPrice').value = Number(it.expectedPrice||0);
       $('#e_dateIn').value = it.dateIn || '';
       $('#e_note').value = it.note || '';
       $('#e_status').value = it.status || 'instock';
-      // Respect IMEI lock
       const locked = getLockImei();
       $('#e_imei').disabled = locked;
       $('#imeiLockState').textContent = locked ? 'khoá' : 'mở';
@@ -742,8 +695,6 @@
       it.color = $('#es_color').value.trim();
       it.condition = Number($('#es_condition').value||0);
       it.battery = Number($('#es_battery').value||0);
-      it.cycles = Number($('#es_cycles').value||0);
-      it.icloud = $('#es_icloud').value;
       it.origin = $('#es_origin').value.trim();
       it.buyPrice = Number($('#es_buyPrice').value||0);
       it.sellPrice = Number($('#es_sellPrice').value||0);
@@ -763,8 +714,6 @@
       $('#es_color').value = it.color || '';
       $('#es_condition').value = Number(it.condition||0);
       $('#es_battery').value = Number(it.battery||0);
-      $('#es_cycles').value = Number(it.cycles||0);
-      $('#es_icloud').value = it.icloud || '';
       $('#es_origin').value = it.origin || '';
       $('#es_buyPrice').value = Number(it.buyPrice||0);
       $('#es_sellPrice').value = Number(it.sellPrice||0);
@@ -802,8 +751,6 @@
           <td>${it.color||''}</td>
           <td class="right">${Number(it.condition||0)}%</td>
           <td class="right">${Number(it.battery||0)||''}</td>
-          <td class="right">${Number(it.cycles||0)||''}</td>
-          <td>${it.icloud||''}</td>
           <td>${it.origin||''}</td>
           <td class="right">${fmt(Number(it.buyPrice||0))}</td>
           <td class="right">${fmt(Number(it.expectedPrice||0))}</td>
@@ -864,8 +811,6 @@
           <td>${it.color||''}</td>
           <td class="right">${Number(it.condition||0)}%</td>
           <td class="right">${Number(it.battery||0)||''}</td>
-          <td class="right">${Number(it.cycles||0)||''}</td>
-          <td>${it.icloud||''}</td>
           <td>${it.origin||''}</td>
           <td class="right">${fmt(Number(it.buyPrice||0))}</td>
           <td class="right">${fmt(Number(it.sellPrice||0))}</td>
@@ -895,8 +840,6 @@
             color: it.color,
             condition: it.condition,
             battery: it.battery,
-            cycles: it.cycles,
-            icloud: it.icloud,
             origin: it.origin,
             buyPrice: it.buyPrice,
             expectedPrice: it.expectedPrice || 0,
@@ -946,9 +889,9 @@
     }
     $('#btnExportCSV').addEventListener('click', ()=>{
       const esc = s => ('"'+ String(s??'').replace(/"/g,'""') + '"');
-      // Items & Sold headers include new fields
-      const itemsHead = ['imei','model','color','condition','battery','cycles','icloud','origin','buyPrice','expectedPrice','dateIn','note','status'];
-      const soldHead  = ['imei','model','color','condition','battery','cycles','icloud','origin','buyPrice','sellPrice','dateIn','dateOut','buyer','profit','note','sellNote'];
+      // Updated headers without iCloud & cycles
+      const itemsHead = ['imei','model','color','condition','battery','origin','buyPrice','expectedPrice','dateIn','note','status'];
+      const soldHead  = ['imei','model','color','condition','battery','origin','buyPrice','sellPrice','dateIn','dateOut','buyer','profit','note','sellNote'];
       const itemsCsv = [itemsHead.join(',')].concat(DB.items.map(it=> itemsHead.map(k=> esc(it[k])).join(','))).join('\n');
       const soldCsv  = [soldHead.join(',') ].concat(DB.sold.map(it=>  soldHead.map(k=> esc(it[k])).join(','))).join('\n');
       const out = '===TON KHO===\n' + itemsCsv + '\n\n===DA BAN===\n' + soldCsv;
@@ -1033,8 +976,6 @@
           color: r[idx('color')] || '',
           condition: Number(r[idx('condition')] || 0),
           battery: Number(r[idx('battery')] || 0),
-          cycles: Number(r[idx('cycles')] || 0),
-          icloud: r[idx('icloud')] || '',
           origin: r[idx('origin')] || '',
           buyPrice: Number(r[idx('buyprice')] || 0),
           expectedPrice: Number(r[idx('expectedprice')] || 0),
@@ -1062,8 +1003,6 @@
           color: r[idx('color')] || '',
           condition: Number(r[idx('condition')] || 0),
           battery: Number(r[idx('battery')] || 0),
-          cycles: Number(r[idx('cycles')] || 0),
-          icloud: r[idx('icloud')] || '',
           origin: r[idx('origin')] || '',
           buyPrice: Number(r[idx('buyprice')] || 0),
           sellPrice: Number(r[idx('sellprice')] || 0),
