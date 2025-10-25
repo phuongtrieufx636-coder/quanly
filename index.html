@@ -3,309 +3,776 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>🐱 Game Nuôi Mèo (HTML)</title>
+  <title>Quản Lý Kho Điện Thoại</title>
   <style>
     :root{
-      --bg:#f7f7fb; --panel:#ffffff; --text:#0f172a; --muted:#64748b; --accent:#8b5cf6; --accent2:#22c55e; --warn:#f59e0b; --danger:#ef4444;
-      --shadow:0 6px 20px rgba(2,6,23,.08);
+      --bg:#ffffff;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --text:#0f172a;
+      --line:#e5e7eb;
+      --accent:#2563eb;
+      --accent-weak:#eff6ff;
+      --danger:#ef4444;
+      --success:#16a34a;
+      --warning:#d97706;
+      --shadow:0 6px 24px rgba(2,6,23,.06), 0 2px 6px rgba(2,6,23,.06);
+      --radius:14px;
     }
-    *{box-sizing:border-box} html,body{height:100%}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial; color:var(--text); background:var(--bg);}    
-    .wrap{max-width:1000px;margin:0 auto;padding:18px}
-    .header{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-    .title{font-weight:800;font-size:clamp(20px,3vw,28px)}
-    .card{background:var(--panel);border:1px solid #e5e7eb;border-radius:16px; box-shadow:var(--shadow)}
-    .hud{display:grid; grid-template-columns: 1.2fr .8fr; gap:14px;}
-    @media (max-width:880px){ .hud{grid-template-columns:1fr} }
-    .arena{position:relative; height:min(56vh,480px); min-height:360px; overflow:hidden; border-radius:16px;}
-    .sky{position:absolute; inset:0; background:linear-gradient(180deg,#e8f0ff 0%, #fefefe 70%)}
-    .floor{position:absolute; left:0; right:0; bottom:0; height:36%; background:linear-gradient(180deg,#e9f8ee 0%, #c7f8db 100%); border-top:1px dashed #bde7cb}
-    .cat{position:absolute; left:50%; top:45%; translate:-50% -50%; font-size:60px; filter:drop-shadow(0 8px 16px rgba(0,0,0,.2)); transition: transform .25s}
-    .cat.walk{animation:walk .8s steps(2) infinite}
-    .cat.sleep{filter:grayscale(.15) brightness(.95)}
-    @keyframes walk{ 0%{transform:translateY(-2px)} 50%{transform:translateY(0)} 100%{transform:translateY(-2px)} }
-    .bubble{position:absolute; translate:-50% -110%; background:#fff; border:1px solid #e5e7eb; padding:6px 10px; border-radius:999px; font-size:14px; color:#374151; box-shadow:var(--shadow)}
-    .obj{position:absolute; font-size:42px; filter:drop-shadow(0 6px 10px rgba(0,0,0,.15))}
-
-    .sidebar{padding:14px}
-    .bars{display:grid; gap:10px}
-    .bar{display:flex; align-items:center; gap:8px}
-    .bar .name{width:110px; font-size:13px; color:var(--muted);}
-    progress{width:100%; height:12px; appearance:none}
-    progress::-webkit-progress-bar{background:#eef2ff; border-radius:8px}
-    progress::-webkit-progress-value{background:linear-gradient(90deg,var(--accent),#06b6d4); border-radius:8px}
-    .bar.clean progress::-webkit-progress-value{background:linear-gradient(90deg,#06b6d4,#60a5fa)}
-    .bar.energy progress::-webkit-progress-value{background:linear-gradient(90deg,#f59e0b,#f97316)}
-    .bar.hunger progress::-webkit-progress-value{background:linear-gradient(90deg,#ef4444,#f97316)}
-
-    .actions{display:grid; grid-template-columns: repeat(4,1fr); gap:10px; margin-top:12px}
-    @media(max-width:560px){ .actions{grid-template-columns: repeat(2,1fr)} }
-    .btn{padding:10px 12px; border-radius:12px; border:1px solid #e5e7eb; background:#fff; cursor:pointer; font-weight:700; display:flex; align-items:center; gap:8px; justify-content:center}
-    .btn:hover{box-shadow:var(--shadow)}
-    .btn:active{transform:translateY(1px)}
-    .btn.primary{background:linear-gradient(180deg,#f7f7ff,#fff)}
-
-    .log{padding:10px; height:120px; overflow:auto; border:1px dashed #e5e7eb; border-radius:12px; background:#fcfcff}
-    .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
-    .small{font-size:12px; color:var(--muted)}
-    .toggle{display:inline-flex; gap:8px; align-items:center}
-    .toggle input{scale:1.1}
-    .footer{margin-top:10px; font-size:12px; color:var(--muted)}
+    *{box-sizing:border-box}
+    body{
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      color:var(--text);
+      background:var(--bg);
+      margin:0;
+      line-height:1.45;
+    }
+    .wrap{max-width:1200px;margin:28px auto;padding:0 16px}
+    .topbar{
+      display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap
+    }
+    h1{font-size:24px;margin:0}
+    .pill{
+      padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--muted);
+      display:inline-flex;gap:6px;align-items:center;
+    }
+    .grid{display:grid;gap:14px}
+    @media (min-width:900px){ .grid-2{grid-template-columns:1.2fr .8fr} }
+    .card{
+      background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);
+      padding:16px;
+    }
+    .card h2{font-size:18px;margin:0 0 10px 0}
+    form .row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+    @media (max-width:720px){ form .row{grid-template-columns:repeat(2,1fr)} }
+    form .row > div{display:flex;flex-direction:column}
+    label{font-size:12px;color:var(--muted);margin-bottom:6px}
+    input, select, textarea{
+      border:1px solid var(--line); border-radius:10px; padding:10px; font-size:14px; background:#fff; color:var(--text);
+      outline:none;
+    }
+    input:focus, select:focus, textarea:focus{border-color:var(--accent); box-shadow:0 0 0 4px var(--accent-weak)}
+    button{
+      border:1px solid var(--line); background:#fff; color:var(--text); border-radius:10px; padding:10px 14px;
+      font-size:14px; cursor:pointer;
+    }
+    .btn-primary{background:var(--accent); color:#fff; border-color:var(--accent)}
+    .btn-danger{background:var(--danger); color:#fff; border-color:var(--danger)}
+    .btn-outline{background:#fff}
+    .btn-ghost{background:transparent;border-color:transparent;color:var(--muted)}
+    .btn{display:inline-flex;align-items:center;gap:8px}
+    .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:10px 0 0 0}
+    .stat{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff}
+    .stat .big{font-weight:700;font-size:18px}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
+    table{width:100%;border-collapse:collapse;font-size:14px;background:#fff}
+    th, td{padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}
+    th{position:sticky;top:0;background:#f8fafc;text-align:left;font-weight:700;color:#0f172a}
+    tr:hover td{background:#fafafa}
+    .right{text-align:right}
+    .center{text-align:center}
+    .muted{color:var(--muted)}
+    .badge{padding:4px 8px;border-radius:999px;font-size:12px;border:1px solid var(--line);display:inline-block}
+    .bd-success{background:#ecfdf5;color:#065f46;border-color:#a7f3d0}
+    .bd-danger{background:#fef2f2;color:#991b1b;border-color:#fecaca}
+    .bd-warning{background:#fffbeb;color:#92400e;border-color:#fde68a}
+    .tabs{display:flex;gap:8px;border-bottom:1px solid var(--line);margin-bottom:12px}
+    .tab{padding:8px 12px;border-radius:10px 10px 0 0;border:1px solid var(--line);border-bottom:none;background:#fff;cursor:pointer}
+    .tab.active{background:#f8fafc;font-weight:700}
+    .srch{display:flex;gap:8px;align-items:center}
+    .grow{flex:1}
+    .hidden{display:none !important}
+    .flex{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .spacer{height:6px}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+    .foot{margin-top:8px;color:var(--muted);font-size:12px}
+    .danger-zone{display:flex;gap:8px;flex-wrap:wrap}
+    dialog::backdrop{background:rgba(0,0,0,.12);}
+    dialog{border:none;border-radius:16px;box-shadow:var(--shadow);padding:0;max-width:520px;width:90%}
+    .modal{padding:16px}
+    .modal header{padding:12px 16px;border-bottom:1px solid var(--line);font-weight:700}
+    .modal .body{padding:12px 16px}
+    .modal footer{padding:12px 16px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="header">
-      <div class="title">🐾 Game Nuôi Mèo</div>
-      <div class="small">Chạm/nhấn trong sân để mèo chạy tới!</div>
+    <div class="topbar">
+      <h1>📦 Quản Lý Kho Điện Thoại</h1>
+      <div class="pill"><span class="mono">LocalStorage</span><span>•</span><span id="deviceInfo">Thiết bị: ...</span></div>
     </div>
 
-    <div class="hud">
-      <!-- KHU VỰC CHƠI -->
-      <div class="card arena" id="arena" aria-label="Khu chơi của mèo">
-        <div class="sky"></div>
-        <div class="floor"></div>
-        <div class="cat" id="cat" role="img" aria-label="Mèo">🐈</div>
-        <div class="bubble" id="bubble" style="left:50%; top:45%">Xin chào! 😺</div>
-        <!-- Đồ vật xuất hiện khi hành động -->
-        <div class="obj" id="bowl" hidden>🍲</div>
-        <div class="obj" id="toy" hidden>🧶</div>
-        <div class="obj" id="bed" hidden>🛏️</div>
-        <div class="obj" id="bath" hidden>🛁</div>
+    <div class="grid grid-2">
+      <div class="card">
+        <h2>Nhập máy (Thêm vào kho)</h2>
+        <form id="formAdd">
+          <div class="row">
+            <div>
+              <label for="imei">IMEI *</label>
+              <input id="imei" required placeholder="Số IMEI duy nhất" />
+            </div>
+            <div>
+              <label for="model">Model *</label>
+              <input id="model" required placeholder="VD: iPhone 13 128GB" />
+            </div>
+            <div>
+              <label for="color">Màu sắc</label>
+              <input id="color" placeholder="Đen / Trắng / Xanh..." />
+            </div>
+            <div>
+              <label for="condition">Tình trạng (đẹp %) *</label>
+              <input id="condition" type="number" min="50" max="100" step="1" value="95" required />
+            </div>
+            <div>
+              <label for="buyPrice">Giá nhập (đ)</label>
+              <input id="buyPrice" type="number" min="0" step="1000" placeholder="VD: 8,500,000" />
+            </div>
+            <div>
+              <label for="dateIn">Ngày nhập</label>
+              <input id="dateIn" type="date" />
+            </div>
+            <div style="grid-column:1 / -1">
+              <label for="note">Ghi chú</label>
+              <input id="note" placeholder="Phụ kiện, pin %, bảo hành..." />
+            </div>
+          </div>
+          <div class="spacer"></div>
+          <div class="toolbar">
+            <button class="btn btn-primary" type="submit">➕ Thêm máy</button>
+            <button class="btn btn-outline" type="reset">Làm mới</button>
+            <span class="muted">* IMEI là duy nhất. Trùng IMEI sẽ không được thêm.</span>
+          </div>
+        </form>
       </div>
 
-      <!-- BẢNG ĐIỀU KHIỂN -->
-      <div class="card sidebar">
-        <div class="row">
-          <div class="small">Tên mèo:</div>
-          <input id="name" placeholder="Đặt tên..." style="padding:8px;border:1px solid #e5e7eb;border-radius:10px;width:160px"/>
-          <button class="btn" id="btnRandom">🎲 Ngẫu nhiên</button>
+      <div class="card">
+        <h2>Tổng quan</h2>
+        <div class="stats">
+          <div class="stat">
+            <div class="muted">Đang tồn</div>
+            <div id="s_instock" class="big">0</div>
+          </div>
+          <div class="stat">
+            <div class="muted">Vốn tồn (đ)</div>
+            <div id="s_capital" class="big">0</div>
+          </div>
+          <div class="stat">
+            <div class="muted">Doanh thu (đ)</div>
+            <div id="s_revenue" class="big">0</div>
+          </div>
+          <div class="stat">
+            <div class="muted">Lãi/Lỗ (đ)</div>
+            <div id="s_profit" class="big">0</div>
+          </div>
         </div>
-        <div class="bars" style="margin-top:10px">
-          <div class="bar hunger"><div class="name">Đói (0 tốt)</div><progress id="hunger" value="30" max="100"></progress></div>
-          <div class="bar energy"><div class="name">Năng lượng</div><progress id="energy" value="70" max="100"></progress></div>
-          <div class="bar"><div class="name">Vui vẻ</div><progress id="happy" value="60" max="100"></progress></div>
-          <div class="bar clean"><div class="name">Sạch sẽ</div><progress id="clean" value="80" max="100"></progress></div>
+        <div class="spacer"></div>
+        <div class="toolbar">
+          <button id="btnExportCSV" class="btn">📤 Xuất CSV</button>
+          <label class="btn btn-outline" for="importCsv">📥 Nhập CSV</label>
+          <input id="importCsv" type="file" accept=".csv,text/csv" class="hidden" />
+          <button id="btnReset" class="btn btn-danger">🧹 Xóa toàn bộ dữ liệu</button>
         </div>
-
-        <div class="actions">
-          <button class="btn primary" id="actFeed">🍗 Cho ăn</button>
-          <button class="btn primary" id="actPlay">🧶 Chơi</button>
-          <button class="btn primary" id="actSleep">🛏️ Ngủ</button>
-          <button class="btn primary" id="actBath">🛁 Tắm</button>
-        </div>
-
-        <div class="row" style="margin-top:8px">
-          <label class="toggle"><input type="checkbox" id="sound"/> 🔊 Âm thanh</label>
-          <button class="btn" id="actSave">💾 Lưu</button>
-          <button class="btn" id="actReset">♻️ Reset</button>
-        </div>
-
-        <div class="log" id="log" aria-live="polite"></div>
-        <div class="footer">Mẹo: giữ các chỉ số ở mức 40–90 là lý tưởng. Nếu Đói > 90, mèo sẽ cáu kỉnh! 😿</div>
+        <div class="foot">Dữ liệu chỉ lưu tại trình duyệt (localStorage). Hãy xuất CSV để sao lưu định kỳ.</div>
       </div>
     </div>
+
+    <div class="card">
+      <div class="tabs">
+        <div id="tabStock" class="tab active">📋 Danh sách tồn kho</div>
+        <div id="tabSold" class="tab">🧾 Lịch sử xuất / bán</div>
+      </div>
+
+      <div id="viewStock">
+        <div class="toolbar">
+          <div class="srch grow">
+            <input id="q" class="grow" placeholder="Tìm theo IMEI, Model, Màu..." />
+            <select id="filterStatus">
+              <option value="">Trạng thái</option>
+              <option value="instock">Đang tồn</option>
+              <option value="hold">Giữ hàng</option>
+            </select>
+            <select id="filterCondition">
+              <option value="">Tình trạng</option>
+              <option value="99">≥ 99%</option>
+              <option value="97">≥ 97%</option>
+              <option value="95">≥ 95%</option>
+              <option value="90">≥ 90%</option>
+            </select>
+          </div>
+          <div class="flex">
+            <button id="btnHoldToggle" class="btn btn-outline">⏸️ Chuyển giữ hàng</button>
+            <button id="btnDeleteSelected" class="btn btn-danger">🗑️ Xóa đã chọn</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table id="tblStock">
+            <thead>
+              <tr>
+                <th class="center"><input type="checkbox" id="chkAll" /></th>
+                <th>IMEI</th>
+                <th>Model</th>
+                <th>Màu</th>
+                <th class="right">Đẹp %</th>
+                <th class="right">Giá nhập</th>
+                <th>Ngày nhập</th>
+                <th>Trạng thái</th>
+                <th>Ghi chú</th>
+                <th class="center">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="viewSold" class="hidden">
+        <div class="toolbar">
+          <div class="srch grow">
+            <input id="qSold" class="grow" placeholder="Tìm theo IMEI / Model / Người mua..." />
+          </div>
+          <div class="flex">
+            <span class="pill">Tổng lãi/lỗ: <b class="mono" id="sumProfitSold">0</b> đ</span>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table id="tblSold">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>IMEI</th>
+                <th>Model</th>
+                <th>Màu</th>
+                <th class="right">Đẹp %</th>
+                <th class="right">Giá nhập</th>
+                <th class="right">Giá bán</th>
+                <th>Ngày bán</th>
+                <th>Người mua</th>
+                <th class="right">Lãi/Lỗ</th>
+                <th>Ghi chú</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Cài đặt nhanh</h2>
+      <div class="toolbar">
+        <div class="pill">Tiền tệ hiển thị: <select id="currency">
+          <option value="đ" selected>đ (VND)</option>
+          <option value="$">$</option>
+        </select></div>
+        <div class="pill">Định dạng số: <select id="thousand">
+          <option value=",">Dấu phẩy ,</option>
+          <option value=".">Dấu chấm .</option>
+          <option value=" ">Khoảng trắng</option>
+        </select></div>
+      </div>
+    </div>
+
+    <dialog id="dlgSell">
+      <div class="modal">
+        <header>Xuất / Bán máy</header>
+        <div class="body">
+          <div class="row" style="grid-template-columns:repeat(2,1fr)">
+            <div>
+              <label for="sellPrice">Giá bán (đ) *</label>
+              <input id="sellPrice" type="number" min="0" step="1000" required />
+            </div>
+            <div>
+              <label for="sellDate">Ngày bán *</label>
+              <input id="sellDate" type="date" required />
+            </div>
+            <div>
+              <label for="buyer">Người mua</label>
+              <input id="buyer" placeholder="Tên / SĐT" />
+            </div>
+            <div>
+              <label for="sellNote">Ghi chú</label>
+              <input id="sellNote" placeholder="Phụ kiện tặng kèm..." />
+            </div>
+          </div>
+          <div class="spacer"></div>
+          <div class="pill">Lợi nhuận dự kiến: <b class="mono" id="previewProfit">0</b> đ</div>
+        </div>
+        <footer>
+          <button class="btn btn-ghost" id="btnCancelSell">Hủy</button>
+          <button class="btn btn-primary" id="btnConfirmSell">Xác nhận bán</button>
+        </footer>
+      </div>
+    </dialog>
+
   </div>
 
   <script>
-    // ====== TRẠNG THÁI ======
-    const S = {
-      name: 'Mèo Con',
-      hunger: 30, // 0 tốt, 100 rất đói
-      energy: 70,
-      happy: 60,
-      clean: 80,
+    // ===== Utilities =====
+    const $ = (q, el=document) => el.querySelector(q);
+    const $$ = (q, el=document) => Array.from(el.querySelectorAll(q));
+    const fmt = (n, sym = getCurrency(), sep = getThousand()) => {
+      if (n === null || n === undefined || isNaN(n)) return '0 ' + sym;
+      const abs = Math.abs(n);
+      const sign = n < 0 ? '-' : '';
+      return sign + abs.toString().replace(/\B(?=(\d{3})+(?!\d))/g, sep) + ' ' + sym;
+    };
+    const uid = () => Math.random().toString(36).slice(2,10);
+    const today = () => new Date().toISOString().slice(0,10);
+    const getCurrency = () => localStorage.getItem('cfg_currency') || 'đ';
+    const getThousand = () => localStorage.getItem('cfg_thousand') || ',';
+    const saveCfg = () => {
+      localStorage.setItem('cfg_currency', $('#currency').value);
+      localStorage.setItem('cfg_thousand', $('#thousand').value);
+      renderAll();
     };
 
-    const els = {
-      arena: document.getElementById('arena'),
-      cat: document.getElementById('cat'),
-      bubble: document.getElementById('bubble'),
-      bowl: document.getElementById('bowl'),
-      toy: document.getElementById('toy'),
-      bed: document.getElementById('bed'),
-      bath: document.getElementById('bath'),
-      hunger: document.getElementById('hunger'),
-      energy: document.getElementById('energy'),
-      happy: document.getElementById('happy'),
-      clean: document.getElementById('clean'),
-      name: document.getElementById('name'),
-      log: document.getElementById('log'),
-      sound: document.getElementById('sound'),
-    };
-
-    const RNG_NAMES = ['Miu','Mun','Bông','Xoài','Mướp','Mít','Đậu','Bé Mèo','Kem','Sữa'];
-
-    let moving = false; let tickTimer; let roamTimer; let moodTimer; let lastActionAt = 0;
-
-    // ====== ÂM THANH (WebAudio beep nhỏ) ======
-    let audioCtx = null;
-    function beep(freq=660, dur=120){
-      if(!els.sound.checked) return;
-      audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
-      const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
-      o.connect(g); g.connect(audioCtx.destination); o.frequency.value=freq; o.type='sine';
-      g.gain.setValueAtTime(0.04, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime+dur/1000);
-      o.start(); setTimeout(()=>o.stop(), dur);
+    // ===== Device detection =====
+    function detectDevice(){
+      const ua = navigator.userAgent || '';
+      const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Windows Phone|Mobi/i.test(ua);
+      const isSmall = Math.min(screen.width, window.innerWidth) <= 820;
+      const isMobile = isMobileUA || isSmall;
+      document.body.classList.toggle('is-mobile', isMobile);
+      $('#deviceInfo').textContent = 'Thiết bị: ' + (isMobile ? 'Mobile' : 'Desktop');
+      return isMobile;
     }
+    window.addEventListener('resize', detectDevice);
 
-    // ====== TIỆN ÍCH ======
-    function clamp(v,min=0,max=100){ return Math.max(min, Math.min(max,v)); }
-    function uiSync(){
-      els.hunger.value = S.hunger; els.energy.value=S.energy; els.happy.value=S.happy; els.clean.value=S.clean;
-      els.name.value = S.name;
+    // ===== Storage =====
+    const KEY = 'phone_inventory_v1';
+    function loadData(){
+      try{
+        const raw = localStorage.getItem(KEY);
+        if(!raw) return {items:[], sold:[]};
+        const obj = JSON.parse(raw);
+        if(!obj.items) obj.items = [];
+        if(!obj.sold) obj.sold = [];
+        return obj;
+      }catch(e){ return {items:[], sold:[]}; }
     }
-    function speak(text){ els.bubble.textContent = text; }
-    function log(msg){ const t = new Date().toLocaleTimeString(); els.log.innerHTML = `<div>[${t}] ${msg}</div>` + els.log.innerHTML; }
-    function save(){ localStorage.setItem('catSave', JSON.stringify(S)); log('Đã lưu tiến độ. 💾'); beep(880,80); }
-    function load(){ const raw = localStorage.getItem('catSave'); if(!raw) return; try{ const d=JSON.parse(raw); Object.assign(S,d); }catch{} }
+    function saveData(db){ localStorage.setItem(KEY, JSON.stringify(db)); }
 
-    // ====== DI CHUYỂN ======
-    function moveCatTo(x,y, speed=240){
-      const rect = els.arena.getBoundingClientRect();
-      x = clamp(x, 40, rect.width-40); y = clamp(y, 80, rect.height-50);
-      const cat = els.cat;
-      const cur = cat.getBoundingClientRect();
-      const dx = x - (cur.left - rect.left + cur.width/2);
-      const dy = y - (cur.top - rect.top + cur.height/2);
-      const dist = Math.hypot(dx,dy);
-      const ms = Math.max(120, Math.min(1200, (dist/ speed)*1000));
-      cat.style.transition = `left ${ms}ms linear, top ${ms}ms linear`;
-      cat.classList.add('walk');
-      cat.style.left = x + 'px';
-      cat.style.top  = y + 'px';
-      moving = true;
-      return new Promise(res=> setTimeout(()=>{ cat.classList.remove('walk'); moving=false; res(); }, ms+20));
-    }
+    let DB = loadData();
+    let currentSellImei = null;
 
-    function randomRoam(){
-      const r = els.arena.getBoundingClientRect();
-      const x = 60 + Math.random()*(r.width-120);
-      const y = 120 + Math.random()*(r.height-180);
-      moveCatTo(x,y, 180);
-    }
-
-    // ====== HÀNH ĐỘNG ======
-    async function actFeed(){
-      lastActionAt = Date.now();
-      showObj(els.bowl);
-      const p = posOf(els.bowl);
-      await moveCatTo(p.x, p.y-10);
-      speak('Ngon quá! 😻'); beep(720,100);
-      S.hunger = clamp(S.hunger - 28); S.happy = clamp(S.happy + 6); S.energy = clamp(S.energy + 4);
-      uiSync(); log('Bạn đã cho ăn. Đói giảm mạnh.');
-      hideObj(els.bowl, 900);
-    }
-
-    async function actPlay(){
-      lastActionAt = Date.now();
-      showObj(els.toy);
-      const p = posOf(els.toy);
-      await moveCatTo(p.x, p.y-6);
-      speak('Chơi nào! 🐾'); beep(880,100);
-      S.happy = clamp(S.happy + 16); S.energy = clamp(S.energy - 8); S.hunger = clamp(S.hunger + 6);
-      uiSync(); log('Bạn đã chơi cùng mèo. Vui vẻ tăng.');
-      hideObj(els.toy, 1100);
-    }
-
-    async function actSleep(){
-      lastActionAt = Date.now();
-      showObj(els.bed);
-      const p = posOf(els.bed);
-      await moveCatTo(p.x+6, p.y-10);
-      els.cat.classList.add('sleep'); speak('Khò khò... 😴');
-      beep(520,80);
-      await wait(1400);
-      S.energy = clamp(S.energy + 24); S.hunger = clamp(S.hunger + 8); S.clean = clamp(S.clean - 6);
-      els.cat.classList.remove('sleep'); uiSync(); log('Mèo đã ngủ một giấc ngắn. Năng lượng tăng.');
-      hideObj(els.bed, 600);
-    }
-
-    async function actBath(){
-      lastActionAt = Date.now();
-      showObj(els.bath);
-      const p = posOf(els.bath);
-      await moveCatTo(p.x, p.y-8);
-      speak('Tắm mát! 🛁'); beep(1000,90);
-      await wait(900);
-      S.clean = clamp(S.clean + 22); S.happy = clamp(S.happy + 4); S.energy = clamp(S.energy - 4);
-      uiSync(); log('Tắm xong thơm tho sạch sẽ.');
-      hideObj(els.bath, 700);
-    }
-
-    function wait(ms){ return new Promise(r=>setTimeout(r,ms)); }
-
-    function posOf(el){ const R = el.getBoundingClientRect(); const A = els.arena.getBoundingClientRect(); return {x: R.left - A.left + R.width/2, y: R.top - A.top + R.height/2}; }
-    function showObj(el){
-      placeObj(el); el.hidden=false; el.style.opacity='0'; el.style.transition='opacity .25s, transform .25s'; el.style.transform='translateY(6px)';
-      requestAnimationFrame(()=>{ el.style.opacity='1'; el.style.transform='translateY(0)'; });
-    }
-    function hideObj(el, delay=500){ setTimeout(()=>{ el.style.opacity='0'; setTimeout(()=>{ el.hidden=true; }, 250); }, delay); }
-    function placeObj(el){ const r = els.arena.getBoundingClientRect(); const x = 60 + Math.random()*(r.width-120); const y = r.height*0.58 + Math.random()* (r.height*0.24); el.style.left=x+'px'; el.style.top=y+'px'; }
-
-    // ====== VÒNG LẶP GAME ======
-    function startLoops(){
-      clearInterval(tickTimer); clearInterval(roamTimer); clearInterval(moodTimer);
-      // Cập nhật chỉ số mỗi 3s
-      tickTimer = setInterval(()=>{
-        // tự suy giảm & tăng
-        S.hunger = clamp(S.hunger + 3);
-        S.energy = clamp(S.energy - 2);
-        S.happy  = clamp(S.happy - (S.hunger>80? 3:1));
-        if(S.clean>0 && Math.random()<0.5) S.clean = clamp(S.clean - 1);
-        if(S.hunger>90){ speak('Em đói quá...'); }
-        if(S.energy<15){ speak('Buồn ngủ ghê...'); }
-        uiSync();
-        autoNeeds();
-        save();
-      }, 3000);
-
-      // Đi dạo ngẫu nhiên
-      roamTimer = setInterval(()=>{ if(!moving && Date.now()-lastActionAt>1500) randomRoam(); }, 1600);
-
-      // Bong bóng cảm xúc
-      moodTimer = setInterval(()=>{
-        const mood = moodText(); if(Math.random()<0.7) speak(mood);
-      }, 5000);
-    }
-
-    function moodText(){
-      if(S.hunger>85) return 'Đói! cho em ăn với...';
-      if(S.energy<20) return 'Em cần ngủ xíu...';
-      if(S.clean<35) return 'Em muốn tắm ~';
-      if(S.happy>75) return 'Tuyệt vời! ❤';
-      if(S.happy<35) return 'Hơi buồn... chơi cùng em nhé?';
-      return 'Meow~ meow~';
-    }
-
-    // Nhu cầu tự động nếu quá tệ
-    function autoNeeds(){
-      if(S.hunger>95) { log('⚠️ Mèo quá đói! Mất thêm vui.'); S.happy = clamp(S.happy-6); }
-      if(S.energy<5) { log('⚠️ Mèo kiệt sức, bắt buộc ngủ ngắn.'); actSleep(); }
-    }
-
-    // ====== SỰ KIỆN UI ======
-    document.getElementById('actFeed').onclick = actFeed;
-    document.getElementById('actPlay').onclick = actPlay;
-    document.getElementById('actSleep').onclick = actSleep;
-    document.getElementById('actBath').onclick = actBath;
-    document.getElementById('actSave').onclick = save;
-    document.getElementById('actReset').onclick = ()=>{ localStorage.removeItem('catSave'); location.reload(); };
-    document.getElementById('btnRandom').onclick = ()=>{ S.name = RNG_NAMES[Math.floor(Math.random()*RNG_NAMES.length)]; uiSync(); log('Đổi tên mèo thành: '+S.name); };
-    els.name.addEventListener('change', ()=>{ S.name = els.name.value.trim()||'Mèo Con'; save(); });
-
-    // chạm / click để mèo chạy tới
-    els.arena.addEventListener('pointerdown', (e)=>{
-      const r = els.arena.getBoundingClientRect();
-      moveCatTo(e.clientX - r.left, e.clientY - r.top);
-      speak('Tới liền! 🐾');
+    // ===== Add item =====
+    $('#dateIn').value = today();
+    $('#formAdd').addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const imei = $('#imei').value.trim();
+      if(!imei){ alert('Vui lòng nhập IMEI'); return; }
+      if(DB.items.some(x=>x.imei === imei) || DB.sold.some(x=>x.imei === imei)){
+        alert('IMEI đã tồn tại trong hệ thống!'); return;
+      }
+      const item = {
+        id: uid(),
+        imei,
+        model: $('#model').value.trim(),
+        color: $('#color').value.trim(),
+        condition: Number($('#condition').value||0),
+        buyPrice: Number($('#buyPrice').value||0),
+        dateIn: $('#dateIn').value || today(),
+        note: $('#note').value.trim(),
+        status: 'instock', // instock | hold
+        createdAt: Date.now()
+      };
+      DB.items.push(item);
+      saveData(DB);
+      e.target.reset();
+      $('#condition').value = 95;
+      $('#dateIn').value = today();
+      renderAll();
     });
 
-    // ====== KHỞI TẠO ======
-    load();
-    uiSync();
-    log('Chào mừng tới Game Nuôi Mèo!');
-    startLoops();
+    // ===== Tabs =====
+    const tabStock = $('#tabStock'), tabSold = $('#tabSold');
+    const viewStock = $('#viewStock'), viewSold = $('#viewSold');
+    tabStock.addEventListener('click', ()=>{ tabStock.classList.add('active'); tabSold.classList.remove('active'); viewStock.classList.remove('hidden'); viewSold.classList.add('hidden'); });
+    tabSold.addEventListener('click', ()=>{ tabSold.classList.add('active'); tabStock.classList.remove('active'); viewSold.classList.remove('hidden'); viewStock.classList.add('hidden'); });
+
+    // ===== Filters =====
+    $('#q').addEventListener('input', renderStock);
+    $('#filterStatus').addEventListener('change', renderStock);
+    $('#filterCondition').addEventListener('change', renderStock);
+    $('#qSold').addEventListener('input', renderSold);
+
+    // ===== Bulk actions =====
+    $('#chkAll').addEventListener('change', (e)=> {
+      $$('#tblStock tbody input[type="checkbox"]').forEach(c=> c.checked = e.target.checked);
+    });
+    $('#btnDeleteSelected').addEventListener('click', ()=>{
+      const ids = $$('#tblStock tbody input[type="checkbox"]:checked').map(c=>c.dataset.id);
+      if(ids.length===0) { alert('Chưa chọn mục nào'); return; }
+      if(!confirm('Xóa ' + ids.length + ' máy đã chọn?')) return;
+      DB.items = DB.items.filter(x=> !ids.includes(x.id));
+      saveData(DB); renderAll();
+    });
+    $('#btnHoldToggle').addEventListener('click', ()=>{
+      const ids = $$('#tblStock tbody input[type="checkbox"]:checked').map(c=>c.dataset.id);
+      if(ids.length===0) { alert('Chưa chọn mục nào'); return; }
+      DB.items = DB.items.map(x=> ids.includes(x.id) ? {...x, status: x.status==='hold'?'instock':'hold'} : x);
+      saveData(DB); renderStock();
+    });
+
+    // ===== Sell modal =====
+    const dlgSell = $('#dlgSell');
+    $('#btnCancelSell').addEventListener('click', ()=> dlgSell.close());
+    $('#sellPrice').addEventListener('input', previewProfit);
+    function openSellDialog(imei, buyPrice){
+      currentSellImei = imei;
+      $('#sellDate').value = today();
+      $('#sellPrice').value = '';
+      $('#buyer').value = '';
+      $('#sellNote').value = '';
+      $('#previewProfit').textContent = fmt(0);
+      dlgSell.showModal();
+      $('#sellPrice').focus();
+      // Store buyPrice to compute preview
+      $('#sellPrice').dataset.buyPrice = String(buyPrice||0);
+    }
+    function previewProfit(){
+      const p = Number($('#sellPrice').value||0);
+      const b = Number($('#sellPrice').dataset.buyPrice||0);
+      $('#previewProfit').textContent = fmt(p-b);
+    }
+    $('#btnConfirmSell').addEventListener('click', ()=>{
+      const price = Number($('#sellPrice').value||0);
+      const date = $('#sellDate').value;
+      if(price<=0 || !date){ alert('Vui lòng nhập giá bán và ngày bán'); return; }
+      const idx = DB.items.findIndex(x=>x.imei===currentSellImei);
+      if(idx<0){ alert('Không tìm thấy máy'); return; }
+      const it = DB.items[idx];
+      const sold = {
+        ...it,
+        sellPrice: price,
+        dateOut: date,
+        buyer: $('#buyer').value.trim(),
+        sellNote: $('#sellNote').value.trim(),
+        profit: price - (Number(it.buyPrice)||0),
+        soldAt: Date.now()
+      };
+      DB.sold.push(sold);
+      DB.items.splice(idx,1);
+      saveData(DB);
+      dlgSell.close();
+      renderAll();
+      tabSold.click();
+    });
+
+    // ===== Render Stock =====
+    function renderStock(){
+      const tbody = $('#tblStock tbody');
+      tbody.innerHTML = '';
+      const q = $('#q').value.toLowerCase();
+      const fs = $('#filterStatus').value;
+      const fc = $('#filterCondition').value;
+      let list = DB.items.slice().sort((a,b)=> b.createdAt - a.createdAt);
+      if(q) list = list.filter(x =>
+        x.imei.toLowerCase().includes(q) ||
+        (x.model||'').toLowerCase().includes(q) ||
+        (x.color||'').toLowerCase().includes(q)
+      );
+      if(fs) list = list.filter(x => x.status === fs);
+      if(fc) list = list.filter(x => Number(x.condition||0) >= Number(fc));
+
+      for(const it of list){
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="center"><input type="checkbox" data-id="${it.id}"></td>
+          <td class="mono">${it.imei}</td>
+          <td>${it.model||''}</td>
+          <td>${it.color||''}</td>
+          <td class="right">${Number(it.condition||0)}%</td>
+          <td class="right">${fmt(Number(it.buyPrice||0))}</td>
+          <td>${it.dateIn||''}</td>
+          <td>
+            ${it.status==='hold' ? '<span class="badge bd-warning">Giữ hàng</span>' : '<span class="badge bd-success">Đang tồn</span>'}
+          </td>
+          <td>${it.note||''}</td>
+          <td class="center">
+            <button class="btn btn-outline" data-act="edit" data-id="${it.id}">✏️ Sửa</button>
+            <button class="btn btn-primary" data-act="sell" data-imei="${it.imei}">💳 Bán</button>
+            <button class="btn btn-danger" data-act="del" data-id="${it.id}">🗑️</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      }
+
+      // row actions
+      tbody.querySelectorAll('button[data-act="sell"]').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const it = DB.items.find(x=>x.imei === btn.dataset.imei);
+          openSellDialog(it.imei, Number(it.buyPrice||0));
+        });
+      });
+      tbody.querySelectorAll('button[data-act="del"]').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          if(!confirm('Xóa máy này?')) return;
+          DB.items = DB.items.filter(x=> x.id !== btn.dataset.id);
+          saveData(DB); renderAll();
+        });
+      });
+      tbody.querySelectorAll('button[data-act="edit"]').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const id = btn.dataset.id;
+          const it = DB.items.find(x=> x.id===id);
+          const model = prompt('Model:', it.model||'');
+          if(model===null) return;
+          const color = prompt('Màu:', it.color||'');
+          if(color===null) return;
+          const condition = prompt('Tình trạng (%):', String(it.condition||95));
+          if(condition===null) return;
+          const buyPrice = prompt('Giá nhập:', String(it.buyPrice||0));
+          if(buyPrice===null) return;
+          const note = prompt('Ghi chú:', it.note||'');
+          if(note===null) return;
+          it.model = model.trim();
+          it.color = color.trim();
+          it.condition = Number(condition||0);
+          it.buyPrice = Number(buyPrice||0);
+          it.note = note.trim();
+          saveData(DB); renderStock(); updateStats();
+        });
+      });
+    }
+
+    // ===== Render Sold =====
+    function renderSold(){
+      const tbody = $('#tblSold tbody');
+      tbody.innerHTML = '';
+      const q = $('#qSold').value.toLowerCase();
+      let list = DB.sold.slice().sort((a,b)=> b.soldAt - a.soldAt);
+      if(q){
+        list = list.filter(x =>
+          x.imei.toLowerCase().includes(q) ||
+          (x.model||'').toLowerCase().includes(q) ||
+          (x.buyer||'').toLowerCase().includes(q)
+        );
+      }
+      let sumProfit = 0;
+      list.forEach((it,idx)=>{
+        sumProfit += Number(it.profit||0);
+        const tr = document.createElement('tr');
+        const badge = (it.profit||0) >= 0 ? '<span class="badge bd-success">Lãi</span>' : '<span class="badge bd-danger">Lỗ</span>';
+        tr.innerHTML = `
+          <td>${idx+1}</td>
+          <td class="mono">${it.imei}</td>
+          <td>${it.model||''}</td>
+          <td>${it.color||''}</td>
+          <td class="right">${Number(it.condition||0)}%</td>
+          <td class="right">${fmt(Number(it.buyPrice||0))}</td>
+          <td class="right">${fmt(Number(it.sellPrice||0))}</td>
+          <td>${it.dateOut||''}</td>
+          <td>${it.buyer||''}</td>
+          <td class="right">${fmt(Number(it.profit||0))} ${badge}</td>
+          <td>${it.sellNote||''}</td>
+          <td class="center"><button class="btn btn-outline" data-act="undo" data-imei="${it.imei}">↩️ Hoàn tác</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+      $('#sumProfitSold').textContent = fmt(sumProfit);
+      tbody.querySelectorAll('button[data-act="undo"]').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const imei = btn.dataset.imei;
+          const idx = DB.sold.findIndex(x=>x.imei===imei);
+          if(idx<0) return;
+          if(!confirm('Hoàn tác bán và trả về kho?')) return;
+          const it = DB.sold[idx];
+          const back = {
+            id: uid(),
+            imei: it.imei,
+            model: it.model,
+            color: it.color,
+            condition: it.condition,
+            buyPrice: it.buyPrice,
+            dateIn: it.dateIn,
+            note: it.note,
+            status: 'instock',
+            createdAt: Date.now()
+          };
+          DB.items.push(back);
+          DB.sold.splice(idx,1);
+          saveData(DB); renderAll(); tabStock.click();
+        });
+      });
+    }
+
+    // ===== Stats =====
+    function updateStats(){
+      const instock = DB.items.length;
+      const capital = DB.items.reduce((s,x)=> s + Number(x.buyPrice||0), 0);
+      const revenue = DB.sold.reduce((s,x)=> s + Number(x.sellPrice||0), 0);
+      const profit = DB.sold.reduce((s,x)=> s + Number(x.profit||0), 0);
+      $('#s_instock').textContent = instock;
+      $('#s_capital').textContent = fmt(capital);
+      $('#s_revenue').textContent = fmt(revenue);
+      $('#s_profit').textContent = fmt(profit);
+    }
+
+    // ===== Export CSV =====
+    function downloadFile(filename, text){
+      const blob = new Blob([text], {type:'text/plain;charset=utf-8'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename; a.click();
+      URL.revokeObjectURL(url);
+    }
+    $('#btnExportCSV').addEventListener('click', ()=>{
+      // Export two sheets style: items + sold in one file with markers
+      const esc = s => ('"'+ String(s??'').replace(/"/g,'""') + '"');
+      const itemsHead = ['imei','model','color','condition','buyPrice','dateIn','note','status'];
+      const soldHead = ['imei','model','color','condition','buyPrice','sellPrice','dateIn','dateOut','buyer','profit','note','sellNote'];
+      const itemsCsv = [itemsHead.join(',')].concat(DB.items.map(it=> itemsHead.map(k=> esc(it[k])).join(','))).join('\n');
+      const soldCsv = [soldHead.join(',')].concat(DB.sold.map(it=> soldHead.map(k=> esc(it[k])).join(','))).join('\n');
+      const out = '===TON KHO===\n' + itemsCsv + '\n\n===DA BAN===\n' + soldCsv;
+      downloadFile('kho_dien_thoai.csv', out);
+    });
+
+    // ===== CSV Parser (simple, quoted values supported) =====
+    function parseCSV(text){
+      // Split into lines, keep non-empty
+      const lines = text.replace(/\r/g,'').split('\n');
+      // Helper to parse a single CSV line with quotes
+      function parseLine(line){
+        const res = [];
+        let cur = '';
+        let inQ = false;
+        for(let i=0;i<line.length;i++){
+          const ch = line[i];
+          if(inQ){
+            if(ch === '"'){
+              if(line[i+1] === '"'){ cur += '"'; i++; }
+              else { inQ = false; }
+            } else {
+              cur += ch;
+            }
+          } else {
+            if(ch === '"'){ inQ = true; }
+            else if(ch === ','){ res.push(cur); cur = ''; }
+            else { cur += ch; }
+          }
+        }
+        res.push(cur);
+        return res.map(s=>s.trim());
+      }
+      return lines.filter(l=>l.trim().length>0).map(parseLine);
+    }
+
+    // ===== Import CSV =====
+    $('#importCsv').addEventListener('change', (e)=>{
+      const file = e.target.files?.[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try{
+          const txt = String(reader.result);
+          // Support two modes:
+          // 1) Combined file with sections "===TON KHO===" and "===DA BAN==="
+          // 2) Single table CSV with headers (either items or sold)
+          const hasMarkers = /===TON KHO===/i.test(txt) || /===DA BAN===/i.test(txt);
+          let newItems = [];
+          let newSold = [];
+          if(hasMarkers){
+            const parts = txt.split(/===DA BAN===/i);
+            const tonPart = parts[0].split(/===TON KHO===/i)[1] || '';
+            const daBanPart = parts[1] || '';
+            const itemsRows = parseCSV(tonPart);
+            const soldRows = parseCSV(daBanPart);
+            newItems = csvRowsToItems(itemsRows);
+            newSold  = csvRowsToSold(soldRows);
+          } else {
+            // Single CSV table: detect by header columns
+            const rows = parseCSV(txt);
+            const header = rows[0].map(h=>h.toLowerCase());
+            if(header.includes('sellprice') || header.includes('buyer') || header.includes('dateout')){
+              newSold = csvRowsToSold(rows);
+            } else {
+              newItems = csvRowsToItems(rows);
+            }
+          }
+          if(!confirm('Nhập CSV sẽ ghi đè dữ liệu hiện tại. Tiếp tục?')) return;
+          DB = { items: newItems, sold: newSold };
+          saveData(DB); renderAll();
+          alert('Nhập CSV thành công.');
+        }catch(err){
+          alert('Không thể nhập CSV: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+      e.target.value='';
+    });
+
+    function csvRowsToItems(rows){
+      if(!rows || rows.length<2) return [];
+      const head = rows[0].map(x=>x.toLowerCase());
+      const idx = name => head.indexOf(name);
+      const out = [];
+      for(let i=1;i<rows.length;i++){
+        const r = rows[i];
+        if(r.length===1 && r[0]==='') continue;
+        const rec = {
+          id: uid(),
+          imei: r[idx('imei')] || '',
+          model: r[idx('model')] || '',
+          color: r[idx('color')] || '',
+          condition: Number(r[idx('condition')] || 0),
+          buyPrice: Number(r[idx('buyprice')] || 0),
+          dateIn: r[idx('datein')] || '',
+          note: r[idx('note')] || '',
+          status: (r[idx('status')] || 'instock').toLowerCase()==='hold'?'hold':'instock',
+          createdAt: Date.now()
+        };
+        if(rec.imei) out.push(rec);
+      }
+      return out;
+    }
+    function csvRowsToSold(rows){
+      if(!rows || rows.length<2) return [];
+      const head = rows[0].map(x=>x.toLowerCase());
+      const idx = name => head.indexOf(name);
+      const out = [];
+      for(let i=1;i<rows.length;i++){
+        const r = rows[i];
+        if(r.length===1 && r[0]==='') continue;
+        const rec = {
+          id: uid(),
+          imei: r[idx('imei')] || '',
+          model: r[idx('model')] || '',
+          color: r[idx('color')] || '',
+          condition: Number(r[idx('condition')] || 0),
+          buyPrice: Number(r[idx('buyprice')] || 0),
+          dateIn: r[idx('datein')] || '',
+          note: r[idx('note')] || '',
+          status: 'sold',
+          sellPrice: Number(r[idx('sellprice')] || 0),
+          dateOut: r[idx('dateout')] || '',
+          buyer: r[idx('buyer')] || '',
+          profit: Number(r[idx('profit')] || 0),
+          sellNote: r[idx('sellnote')] || '',
+          soldAt: Date.now()
+        };
+        if(rec.imei) out.push(rec);
+      }
+      return out;
+    }
+
+    // ===== Settings =====
+    $('#currency').value = getCurrency();
+    $('#thousand').value = getThousand();
+    $('#currency').addEventListener('change', saveCfg);
+    $('#thousand').addEventListener('change', saveCfg);
+
+    // ===== Initial render =====
+    function renderAll(){
+      renderStock();
+      renderSold();
+      updateStats();
+    }
+    detectDevice();
+    $('#dateIn').value = today();
+    renderAll();
   </script>
 </body>
 </html>
